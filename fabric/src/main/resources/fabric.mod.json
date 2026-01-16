@@ -16,10 +16,10 @@
   "environment": "*",
   "entrypoints": {
     "main": [
-      "eu.shadehost.fabric.ExampleModFabric"
+      "eu.shadehost.fabric.NestedBundleViewerModFabric"
     ],
     "client": [
-      "eu.shadehost.fabric.client.ExampleModFabricClient"
+      "eu.shadehost.fabric.client.NestedBundleViewerModFabricClient"
     ]
   },
   "mixins": [
@@ -29,10 +29,6 @@
     "fabricloader": ">=0.18.4",
     "minecraft": "~1.21.1",
     "java": ">=21",
-    "architectury": ">=13.0.8",
     "fabric-api": "*"
-  },
-  "suggests": {
-    "another-mod": "*"
   }
 }
