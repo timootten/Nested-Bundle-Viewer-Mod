@@ -6,7 +6,8 @@
   "client": [
   ],
   "mixins": [
-    "ClientBundleTooltipMixin"
+    "ClientBundleTooltipMixin",
+    "MinecraftClientMixin"
   ],
   "injectors": {
     "defaultRequire": 1
