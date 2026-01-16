@@ -3,16 +3,17 @@
   "id": "nested_bundle_viewer",
   "version": "${version}",
   "name": "Nested Bundle Viewer",
-  "description": "This is an example description! Tell everyone what your mod is about!",
+  "description": "Nested Bundle Viewer makes Minecraft bundles easier, clearer, and less annoying.\n\nVanilla bundles only show up to 12 items. That’s arbitrary and confusing. This mod removes that limit entirely, so every item inside a bundle is visible. No more hidden items. No more guessing.\n\nIt also adds proper support for nested bundles. When you select a bundle in your inventory, its contents are displayed right next to it. If that bundle contains other bundles, you can see those too without emptying anything.\n\nThe mod is fully client-side and does not need to be installed on servers. That said, servers can disallow it. The only thing a server can observe is that you may take items out of a bundle in situations where vanilla’s 12-item display limit would normally prevent it.\n\nSimple, transparent, and practical. Bundles the way they should have worked from the start.",
   "authors": [
-    "Me!"
+    "Timo Otten"
   ],
   "contact": {
-    "homepage": "https://fabricmc.net/",
-    "sources": "https://github.com/FabricMC/fabric-example-mod"
+    "homepage": "https://github.com/timootten/Nested-Bundle-Viewer-Mod",
+    "sources": "https://github.com/timootten/Nested-Bundle-Viewer-Mod",
+    "issues": "https://github.com/timootten/Nested-Bundle-Viewer-Mod/issues"
   },
-  "license": "CC0-1.0",
-  "icon": "assets/nested_bundle_viewer/icon.png",
+  "license": "MIT",
+  "icon": "assets/nested_bundle_viewer/logo.png",
   "environment": "*",
   "entrypoints": {
     "main": [
@@ -27,7 +28,7 @@
   ],
   "depends": {
     "fabricloader": ">=0.18.4",
-    "minecraft": "~1.21.1",
+    "minecraft": "~1.21.11",
     "java": ">=21",
     "fabric-api": "*"
   }

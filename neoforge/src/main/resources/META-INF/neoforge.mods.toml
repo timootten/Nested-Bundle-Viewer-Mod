@@ -1,24 +1,34 @@
 modLoader = "javafml"
 loaderVersion = "[4,)"
-#issueTrackerURL = ""
-license = "Insert License Here"
+issueTrackerURL = "https://github.com/timootten/Nested-Bundle-Viewer-Mod/issues"
+displayURL = "https://github.com/timootten/Nested-Bundle-Viewer-Mod"
+license = "MIT"
 
 [[mods]]
 modId = "nested_bundle_viewer"
 version = "${version}"
 displayName = "Nested Bundle Viewer"
-authors = "Me!"
+authors = "Timo Otten"
 description = '''
-This is an example description! Tell everyone what your mod is about!
+Nested Bundle Viewer makes Minecraft bundles easier, clearer, and less annoying.
+
+Vanilla bundles only show up to 12 items. That’s arbitrary and confusing. This mod removes that limit entirely, so every item inside a bundle is visible. No more hidden items. No more guessing.
+
+It also adds proper support for nested bundles. When you select a bundle in your inventory, its contents are displayed right next to it. If that bundle contains other bundles, you can see those too without emptying anything.
+
+The mod is fully client-side and does not need to be installed on servers.
+That said, servers can disallow it. The only thing a server can observe is that you may take items out of a bundle in situations where vanilla’s 12-item display limit would normally prevent it.
+
+Simple, transparent, and practical. Bundles the way they should have worked from the start.
 '''
-#logoFile = ""
+logoFile = "assets/nested_bundle_viewer/logo.png"
 
 [[dependencies.nested_bundle_viewer]]
 modId = "neoforge"
 type = "required"
-versionRange = "[21.1,)"
+versionRange = "[21.11,)"
 ordering = "NONE"
-side = "BOTH"
+side = "CLIENT"
 
 [[dependencies.nested_bundle_viewer]]
 modId = "minecraft"
@@ -27,12 +37,12 @@ versionRange = "[1.21.11,)"
 ordering = "NONE"
 side = "BOTH"
 
-[[dependencies.nested_bundle_viewer]]
-modId = "architectury"
-type = "required"
-versionRange = "[19.0.1,)"
-ordering = "AFTER"
-side = "BOTH"
+#[[dependencies.nested_bundle_viewer]]
+#modId = "architectury"
+#type = "required"
+#versionRange = "[19.0.1,)"
+#ordering = "AFTER"
+#side = "BOTH"
 
 [[mixins]]
 config = "nested_bundle_viewer.mixins.json"
