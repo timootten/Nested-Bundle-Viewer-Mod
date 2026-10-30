@@ -4,7 +4,7 @@ package eu.shadehost;
  * Layout rules for the bundle tooltip grid.
  * <p>
  * Vanilla hardcodes 4 columns (96px). Because this mod shows every item, the grid grows
- * roughly square instead: more items means more columns, up to {@link #MAX_COLUMNS}.
+ * wider instead: more items means more columns, limited by the screen size.
  */
 public final class BundleLayout {
 

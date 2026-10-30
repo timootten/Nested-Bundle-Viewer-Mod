@@ -23,6 +23,8 @@ jobs:
           distribution: temurin
           java-version: ${{ matrix.java }}
       - uses: gradle/actions/setup-gradle@v4
+      - name: Make gradlew executable
+        run: chmod +x gradlew
       - run: ./gradlew build -Pmc=${{ matrix.mc }}
       - uses: actions/upload-artifact@v4
         with:

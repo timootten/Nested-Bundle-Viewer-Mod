@@ -1,10 +1,10 @@
 package eu.shadehost.mixin;
 
+import eu.shadehost.NestedTooltipPositioner;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientBundleTooltip;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
-import net.minecraft.client.gui.screens.inventory.tooltip.DefaultTooltipPositioner;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
@@ -65,7 +65,7 @@ public class ClientBundleTooltipMixin {
                     List.of(nestedTooltip),
                     nestedX,
                     nestedY,
-                    DefaultTooltipPositioner.INSTANCE,
+                    new NestedTooltipPositioner(x, width),
                     tooltipStyle
             );
         }
