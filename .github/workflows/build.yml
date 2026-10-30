@@ -1,0 +1,32 @@
+name: Build
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Add a version here after creating gradle/versions/<version>.properties
+        include:
+          - { mc: "1.21.11", java: 21 }
+          - { mc: "26.1.2", java: 25 }
+          - { mc: "26.2", java: 25 }
+          - { mc: "26.3", java: 25 }
+    steps:
+      - uses: actions/checkout@v4
+      # Loom requires Gradle to run on the JDK the Minecraft version needs.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+      - uses: gradle/actions/setup-gradle@v4
+      - run: ./gradlew build -Pmc=${{ matrix.mc }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nested_bundle_viewer-${{ matrix.mc }}
+          path: |
+            fabric/build/libs/*.jar
+            neoforge/build/libs/*.jar

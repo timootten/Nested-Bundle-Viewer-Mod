@@ -7,6 +7,20 @@ pluginManagement {
     }
 }
 
+// Version selection: ./gradlew build -Pmc=<version> loads gradle/versions/<version>.properties
+def mcVersion = providers.gradleProperty('mc').get()
+if (true) {
+    def versionFile = new File(settingsDir, "gradle/versions/${mcVersion}.properties")
+    if (!versionFile.exists()) {
+        throw new GradleException("Unknown Minecraft version '${mcVersion}': ${versionFile} is missing")
+    }
+    def versionProps = new Properties()
+    versionFile.withInputStream { versionProps.load(it) }
+    gradle.beforeProject { p ->
+        versionProps.each { k, v -> p.ext.set(k.toString(), v.toString()) }
+    }
+}
+
 rootProject.name = 'nested_bundle_viewer'
 
 include 'common'

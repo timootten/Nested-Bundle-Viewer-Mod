@@ -5,7 +5,9 @@
   "minVersion": "0.8",
   "client": [
     "ClientBundleTooltipMixin",
-    "BundleContentsMixin"
+    "BundleContentsMixin",
+    "BundleProgressTextMixin",
+    "BundleLayoutMixin"
   ],
   "mixins": [
   ],

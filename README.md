@@ -33,3 +33,19 @@ Servers can choose to disallow it. The only thing a server can detect is that yo
 Bundles are useful, but the vanilla UI hides information and makes them frustrating to use. Nested Bundle Viewer fixes that by showing exactly what is inside, nothing more and nothing less.
 
 ![Nested Bundle Viewer Screenshot](images/screenshot.png "Bundle Viewer in action")
+## Supported versions
+| Minecraft | Loaders | Java |
+|---|---|---|
+| 1.21.11 | Fabric, NeoForge | 21 |
+| 26.1.2 | Fabric, NeoForge | 25 |
+| 26.2 | Fabric, NeoForge | 25 |
+| 26.3 | Fabric, NeoForge | 25 |
+## Building
+```
+./gradlew build -Pmc=<version>
+```
+Each version has a file in `gradle/versions/<version>.properties` containing dependency versions, the Java version and the `compat_variant`. Code that needs version-specific Minecraft APIs lives in `common/src/compat/<variant>`; shared code stays in `common/src/main`.
+### Adding a new Minecraft version
+1. Create `gradle/versions/<version>.properties` (copy the closest version).
+2. Point `compat_variant` to an existing variant or add `common/src/compat/<new variant>/java`.
+3. Build with `-Pmc=<version>` and add the version to the matrix in `.github/workflows/build.yml`.

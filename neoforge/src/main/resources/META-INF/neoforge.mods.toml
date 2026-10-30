@@ -21,7 +21,7 @@ That said, servers can disallow it. The only thing a server can observe is that 
 
 Simple, transparent, and practical. Bundles the way they should have worked from the start.
 '''
-logoFile = "assets/nested_bundle_viewer/logo.png"
+iconFile = "assets/nested_bundle_viewer/logo.png"
 
 [[dependencies.nested_bundle_viewer]]
 modId = "neoforge"
@@ -33,7 +33,7 @@ side = "CLIENT"
 [[dependencies.nested_bundle_viewer]]
 modId = "minecraft"
 type = "required"
-versionRange = "[1.21.11,)"
+versionRange = "[${minecraft_version}]"
 ordering = "NONE"
 side = "BOTH"
 
