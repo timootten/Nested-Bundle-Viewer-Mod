@@ -1,0 +1,60 @@
+name: Publish
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Versionsname (z. B. v1.0.1)"
+        required: true
+env:
+  MOD_VERSION: ${{ github.event.release.tag_name || inputs.version }}
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { mc: "1.21.11", java: 21 }
+          - { mc: "26.1.2", java: 25 }
+          - { mc: "26.2", java: 25 }
+          - { mc: "26.3", java: 25 }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+      - run: ./gradlew build -Pmc=${{ matrix.mc }}
+      - name: Publish Fabric
+        uses: Kir-Antipov/mc-publish@v3.3
+        with:
+          curseforge-id: 1432262
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+          name: "[Fabric ${{ matrix.mc }}] ${{ env.MOD_VERSION }}"
+          version: ${{ env.MOD_VERSION }}
+          version-type: release
+          loaders: fabric
+          game-versions: ${{ matrix.mc }}
+          java: ${{ matrix.java }}
+          dependencies: |
+            fabric-api(required){curseforge:306612}
+          files: |
+            fabric/build/libs/!(*-@(dev|sources|javadoc|shadow|raw|dev-shadow)).jar
+      - name: Publish NeoForge
+        uses: Kir-Antipov/mc-publish@v3.3
+        with:
+          curseforge-id: 1432262
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+          name: "[NeoForge ${{ matrix.mc }}] ${{ env.MOD_VERSION }}"
+          version: ${{ env.MOD_VERSION }}
+          version-type: release
+          loaders: neoforge
+          game-versions: ${{ matrix.mc }}
+          java: ${{ matrix.java }}
+          files: |
+            neoforge/build/libs/!(*-@(dev|sources|javadoc|shadow|raw|dev-shadow)).jar
