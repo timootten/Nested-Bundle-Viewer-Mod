@@ -7,19 +7,44 @@ on:
       version:
         description: "Versionsname (z. B. v1.0.1)"
         required: true
+      mc:
+        description: "Minecraft-Version (all = alle)"
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - "1.21.11"
+          - "26.1.2"
+          - "26.2"
+          - "26.3"
 env:
   MOD_VERSION: ${{ github.event.release.tag_name || inputs.version }}
 jobs:
+  matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      include: ${{ steps.select.outputs.include }}
+    steps:
+      - id: select
+        shell: bash
+        env:
+          SELECTED: ${{ inputs.mc || 'all' }}
+        run: |
+          # Add a version here after creating gradle/versions/<version>.properties
+          ALL='[{"mc":"1.21.11","java":21},{"mc":"26.1.2","java":25},{"mc":"26.2","java":25},{"mc":"26.3","java":25}]'
+          if [ "$SELECTED" = "all" ]; then
+            echo "include=$ALL" >> "$GITHUB_OUTPUT"
+          else
+            echo "include=$(echo "$ALL" | jq -c --arg mc "$SELECTED" '[.[] | select(.mc == $mc)]')" >> "$GITHUB_OUTPUT"
+          fi
   publish:
+    needs: matrix
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - { mc: "1.21.11", java: 21 }
-          - { mc: "26.1.2", java: 25 }
-          - { mc: "26.2", java: 25 }
-          - { mc: "26.3", java: 25 }
+        include: ${{ fromJSON(needs.matrix.outputs.include) }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
