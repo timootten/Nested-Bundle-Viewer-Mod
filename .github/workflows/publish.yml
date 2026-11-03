@@ -1,0 +1,188 @@
+name: Publish
+
+# Release published  -> builds and uploads ALL Minecraft versions to CurseForge.
+# Manual run         -> choose the version name and one (or all) Minecraft versions.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Mod version, e.g. 1.0.1 or v1.0.1"
+        required: true
+        type: string
+      mc:
+        description: "Minecraft version to publish"
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - "1.21.11"
+          - "26.1.2"
+          - "26.2"
+          - "26.3"
+      dry_run:
+        description: "Build only, do not upload to CurseForge"
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+# Never run two publishes for the same version at once (prevents duplicate uploads).
+concurrency:
+  group: publish-${{ github.event.release.tag_name || inputs.version }}
+  cancel-in-progress: false
+
+env:
+  CURSEFORGE_PROJECT_ID: "1432262"
+  FABRIC_API_CURSEFORGE_ID: "306612"
+
+jobs:
+  prepare:
+    name: Prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      matrix: ${{ steps.select.outputs.matrix }}
+      version: ${{ steps.version.outputs.version }}
+      release_type: ${{ steps.version.outputs.release_type }}
+    steps:
+      - id: version
+        shell: bash
+        env:
+          RAW_VERSION: ${{ github.event.release.tag_name || inputs.version }}
+          PRERELEASE: ${{ github.event.release.prerelease }}
+        run: |
+          set -euo pipefail
+          VERSION="${RAW_VERSION#v}"
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.+-][0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::Invalid version '$RAW_VERSION' (expected e.g. 1.0.1 or v1.0.1)"
+            exit 1
+          fi
+          case "$VERSION" in
+            *alpha*) TYPE=alpha ;;
+            *beta*|*rc*) TYPE=beta ;;
+            *) if [ "$PRERELEASE" = "true" ]; then TYPE=beta; else TYPE=release; fi ;;
+          esac
+          {
+            echo "version=$VERSION"
+            echo "release_type=$TYPE"
+          } >> "$GITHUB_OUTPUT"
+
+      - id: select
+        shell: bash
+        env:
+          SELECTED: ${{ inputs.mc || 'all' }}
+        run: |
+          set -euo pipefail
+          # Add a version here after creating gradle/versions/<version>.properties
+          ALL='[
+            {"mc":"1.21.11","java":21},
+            {"mc":"26.1.2","java":25},
+            {"mc":"26.2","java":25},
+            {"mc":"26.3","java":25}
+          ]'
+          if [ "$SELECTED" = "all" ]; then
+            MATRIX=$(jq -c . <<< "$ALL")
+          else
+            MATRIX=$(jq -c --arg mc "$SELECTED" '[.[] | select(.mc == $mc)]' <<< "$ALL")
+          fi
+          if [ "$MATRIX" = "[]" ]; then
+            echo "::error::Unknown Minecraft version '$SELECTED'"
+            exit 1
+          fi
+          echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
+
+  publish:
+    name: Minecraft ${{ matrix.mc }}
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.prepare.outputs.matrix) }}
+    env:
+      VERSION: ${{ needs.prepare.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # Loom needs Gradle to run on the JDK the Minecraft version requires.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: true
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      - name: Build
+        run: ./gradlew build -Pmc=${{ matrix.mc }} -Pmod_version="$VERSION" --stacktrace
+
+      # Fail early with a clear message instead of publishing the wrong file.
+      - name: Locate jars
+        id: jars
+        shell: bash
+        run: |
+          set -euo pipefail
+          for loader in fabric neoforge; do
+            JAR="$loader/build/libs/nested_bundle_viewer-$loader-${{ matrix.mc }}-$VERSION.jar"
+            if [ ! -f "$JAR" ]; then
+              echo "::error::Expected $JAR not found. Found:"
+              ls -1 "$loader/build/libs" || true
+              exit 1
+            fi
+            echo "$loader=$JAR" >> "$GITHUB_OUTPUT"
+          done
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nested_bundle_viewer-${{ matrix.mc }}-${{ needs.prepare.outputs.version }}
+          path: |
+            ${{ steps.jars.outputs.fabric }}
+            ${{ steps.jars.outputs.neoforge }}
+          if-no-files-found: error
+
+      - name: Publish Fabric
+        if: ${{ !inputs.dry_run }}
+        uses: Kir-Antipov/mc-publish@v3.3
+        with:
+          curseforge-id: ${{ env.CURSEFORGE_PROJECT_ID }}
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+          name: "[Fabric ${{ matrix.mc }}] v${{ env.VERSION }}"
+          version: ${{ env.VERSION }}
+          version-type: ${{ needs.prepare.outputs.release_type }}
+          changelog: ${{ github.event.release.body }}
+          loaders: fabric
+          game-versions: ${{ matrix.mc }}
+          java: ${{ matrix.java }}
+          dependencies: |
+            fabric-api(required){curseforge:${{ env.FABRIC_API_CURSEFORGE_ID }}}
+          files: ${{ steps.jars.outputs.fabric }}
+          retry-attempts: 3
+          retry-delay: 10000
+
+      - name: Publish NeoForge
+        if: ${{ !inputs.dry_run }}
+        uses: Kir-Antipov/mc-publish@v3.3
+        with:
+          curseforge-id: ${{ env.CURSEFORGE_PROJECT_ID }}
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+          name: "[NeoForge ${{ matrix.mc }}] v${{ env.VERSION }}"
+          version: ${{ env.VERSION }}
+          version-type: ${{ needs.prepare.outputs.release_type }}
+          changelog: ${{ github.event.release.body }}
+          loaders: neoforge
+          game-versions: ${{ matrix.mc }}
+          java: ${{ matrix.java }}
+          files: ${{ steps.jars.outputs.neoforge }}
+          retry-attempts: 3
+          retry-delay: 10000
+chern
